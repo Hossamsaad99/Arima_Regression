@@ -9,6 +9,6 @@ pydantic
 pmdarima
 pandas_datareader
 #Profit
-pystan
+#pystan
 prophet
 holidays
