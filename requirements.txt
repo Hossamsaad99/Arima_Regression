@@ -8,6 +8,6 @@ httptools
 pydantic
 pmdarima
 pandas_datareader
-fbprophet
+scikit-learn==0.23.2
 prophet
 holidays
