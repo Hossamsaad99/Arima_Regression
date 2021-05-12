@@ -9,5 +9,4 @@ pydantic
 pmdarima
 pandas_datareader
 scikit-learn==0.23.2
-prophet
-holidays
+tensorflow-cpu
