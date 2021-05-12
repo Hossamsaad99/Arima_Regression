@@ -40,8 +40,8 @@ from datetime import *
 import pandas_datareader as pdr
 import numpy as np
 import pandas as pd
-import holidays
-from prophet import Prophet
+# import holidays
+# from prophet import Prophet
 # for arima
 from statsmodels.tsa.arima_model import ARIMA
 import pmdarima as pm
@@ -66,37 +66,37 @@ import pickle
 # In[10]:
 
 
-def prophet (ticker):
-  """
-  Forcasting using prophet ! by Getting the desired data from yahoo, then doing some data manipulation, then the comes the prophet's turn
-  Args:
-      (str) ticket - the ticker of desired dataset (company)
-  Returns:
-      (float) prophet_output - the model out-put (the prediction of the next day)
-  """
+# def prophet (ticker):
+#   """
+#   Forcasting using prophet ! by Getting the desired data from yahoo, then doing some data manipulation, then the comes the prophet's turn
+#   Args:
+#       (str) ticket - the ticker of desired dataset (company)
+#   Returns:
+#       (float) prophet_output - the model out-put (the prediction of the next day)
+#   """
 
-  # data_gathering
-  df = pdr.DataReader(ticker, data_source='yahoo', start='2015-01-01')
+#   # data_gathering
+#   df = pdr.DataReader(ticker, data_source='yahoo', start='2015-01-01')
 
-  # data manipulation
-  holiday = pd.DataFrame([])
-  for date, name in sorted(holidays.UnitedStates(years=[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]).items()):
-      holiday = holiday.append(pd.DataFrame({'ds': date, 'holiday': "US-Holidays"}, index=[0]), ignore_index=True)
-  holiday['ds'] = pd.to_datetime(holiday['ds'], format='%Y-%m-%d', errors='ignore')
+#   # data manipulation
+#   holiday = pd.DataFrame([])
+#   for date, name in sorted(holidays.UnitedStates(years=[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]).items()):
+#       holiday = holiday.append(pd.DataFrame({'ds': date, 'holiday': "US-Holidays"}, index=[0]), ignore_index=True)
+#   holiday['ds'] = pd.to_datetime(holiday['ds'], format='%Y-%m-%d', errors='ignore')
 
-  # data frame modification to be accepted by prophet
-  data = df['Close'].reset_index()
-  data.columns = ['ds', 'y']
+#   # data frame modification to be accepted by prophet
+#   data = df['Close'].reset_index()
+#   data.columns = ['ds', 'y']
 
-  # model building
-  m = Prophet(holidays=holiday,seasonality_mode='additive', changepoint_prior_scale = 0.1, seasonality_prior_scale=0.01)
-  m.fit(data)
+#   # model building
+#   m = Prophet(holidays=holiday,seasonality_mode='additive', changepoint_prior_scale = 0.1, seasonality_prior_scale=0.01)
+#   m.fit(data)
 
-  # model predictions
-  future = m.make_future_dataframe(periods=1)
-  model_prediction = m.predict(future) 
-  prophet_prediction = float(model_prediction[ 'yhat'][-1:])
-  return prophet_prediction
+#   # model predictions
+#   future = m.make_future_dataframe(periods=1)
+#   model_prediction = m.predict(future) 
+#   prophet_prediction = float(model_prediction[ 'yhat'][-1:])
+#   return prophet_prediction
 
 
 def arima(ticker):
@@ -240,14 +240,14 @@ def index():
 @app.post('/predict')
 async def predict_price(data: str):
     if data == 'F':
-      prophet_prediction = float(prophet(data))
+#       prophet_prediction = float(prophet(data))
       arima_prediction, diff = arima(data)
       model_prediction, lstm_prediction = lstm(data)
       reg_prediction,reg_diff = Regression(data)
 #       trans_prediction, trans_difference = Transformer(data)
 
       return {
-        'Prophet prediction': prophet_prediction,
+#         'Prophet prediction': prophet_prediction,
         'Arima prediction' : arima_prediction[0],
         'LSTM prediction' : lstm_prediction,
         'regression prediction' : reg_prediction[0]
