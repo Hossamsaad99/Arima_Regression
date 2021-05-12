@@ -8,6 +8,7 @@ httptools
 pydantic
 pmdarima
 pandas_datareader
+#Profit
 pystan
 prophet
 holidays
