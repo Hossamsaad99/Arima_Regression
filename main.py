@@ -18,46 +18,78 @@ import pandas as pd
 from statsmodels.tsa.arima_model import ARIMA
 import pmdarima as pm
 # for LSTM
-# from tensorflow import keras
-# from tensorflow.keras.models import load_model
+from tensorflow import keras
+from keras.models import load_model
 import pickle
 
-import holidays
-from prophet import Prophet
+# import holidays
+# from prophet import Prophet
 # In[ ]:
 
-def prophet (ticker):
+# def prophet (ticker):
+#   """
+#   Forcasting using prophet ! by Getting the desired data from yahoo, then doing some data manipulation, then the comes the prophet's turn
+#   Args:
+#       (str) ticket - the ticker of desired dataset (company)
+#   Returns:
+#       (float) prophet_output - the model out-put (the prediction of the next day)
+#   """
+
+#   # data_gathering
+#   df = pdr.DataReader(ticker, data_source='yahoo', start='2015-01-01')
+
+#   # data manipulation
+#   holiday = pd.DataFrame([])
+#   for date, name in sorted(holidays.UnitedStates(years=[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]).items()):
+#       holiday = holiday.append(pd.DataFrame({'ds': date, 'holiday': "US-Holidays"}, index=[0]), ignore_index=True)
+#   holiday['ds'] = pd.to_datetime(holiday['ds'], format='%Y-%m-%d', errors='ignore')
+
+#   # data frame modification to be accepted by prophet
+#   data = df['Close'].reset_index()
+#   data.columns = ['ds', 'y']
+
+#   # model building
+#   m = Prophet(holidays=holiday,seasonality_mode='additive', changepoint_prior_scale = 0.1, seasonality_prior_scale=0.01)
+#   m.fit(data)
+
+#   # model predictions
+#   future = m.make_future_dataframe(periods=1)
+#   model_prediction = m.predict(future) 
+#   prophet_prediction = float(model_prediction[ 'yhat'][-1:])
+#   return prophet_prediction
+
+
+def lstm(data_set):
   """
-  Forcasting using prophet ! by Getting the desired data from yahoo, then doing some data manipulation, then the comes the prophet's turn
+  Getting the desired data from yahoo, then doing some data manipulation such as data
+  reshaping
   Args:
-      (str) ticket - the ticker of desired dataset (company)
+      (str) data_set - the ticker of desired dataset (company)
   Returns:
-      (float) prophet_output - the model out-put (the prediction of the next day)
+      (float) diff_prediction - the model out-put (the prediction of the next day)
+      (float) real_prediction - the model output + today's price (real price of tomorrow)
   """
 
-  # data_gathering
-  df = pdr.DataReader(ticker, data_source='yahoo', start='2015-01-01')
+  # data gathering
+  df = pdr.DataReader(data_set, data_source='yahoo', start=date.today() - timedelta(100))
 
   # data manipulation
-  holiday = pd.DataFrame([])
-  for date, name in sorted(holidays.UnitedStates(years=[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]).items()):
-      holiday = holiday.append(pd.DataFrame({'ds': date, 'holiday': "US-Holidays"}, index=[0]), ignore_index=True)
-  holiday['ds'] = pd.to_datetime(holiday['ds'], format='%Y-%m-%d', errors='ignore')
 
-  # data frame modification to be accepted by prophet
-  data = df['Close'].reset_index()
-  data.columns = ['ds', 'y']
+  # creating a new df with Xt - Xt-1 values of the close prices (most recent 60 days)
+  close_df = df['2012-01-01':].reset_index()['Close'][-61:]
+  close_diff = close_df.diff().dropna()
+  data = np.array(close_diff).reshape(-1, 1)
 
-  # model building
-  m = Prophet(holidays=holiday,seasonality_mode='additive', changepoint_prior_scale = 0.1, seasonality_prior_scale=0.01)
-  m.fit(data)
+  # reshaping the data to 3D to be accepted by our LSTM model
+  model_input = np.reshape(data, (1, 60, 1))
 
-  # model predictions
-  future = m.make_future_dataframe(periods=1)
-  model_prediction = m.predict(future) 
-  prophet_prediction = float(model_prediction[ 'yhat'][-1:])
-  return prophet_prediction
+  # loading the model and predicting
+  loaded_model = load_model("lstm_f_60.hdf5")
+  model_prediction = float(loaded_model.predict(model_input))
+  real_prediction = model_prediction + df['Close'][-1]
+  
 
+  return model_prediction, real_prediction
 
 def arima(ticker):
   """
@@ -125,18 +157,20 @@ def index():
 @app.post('/predict')
 async def predict_price(data: str):
     if data == 'F':
-      prophet_prediction = float(prophet(data))
+      
+      model_prediction, lstm_prediction = lstm(data)
+#       prophet_prediction = float(prophet(data))
 
       arima_prediction, diff = arima(data)
 
       reg_prediction,reg_diff = Regression(data)
 
 
-      return {'Prophet prediction': prophet_prediction,
-
-        'Arima prediction' : arima_prediction[0],
-
-        'regression prediction' : reg_prediction[0]
+      return {
+#               'Prophet prediction': prophet_prediction,
+              'LSTM prediction' : lstm_prediction,
+              'Arima prediction' : arima_prediction[0],
+              'regression prediction' : reg_prediction[0]
 
             }
 
