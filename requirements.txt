@@ -1,0 +1,15 @@
+numpy
+scikit-learn
+pandas
+fastapi
+uvicorn
+gunicorn
+uvloop
+httptools
+pydantic
+pmdarima
+pandas_datareader
+pystan
+prophet
+tensorflow
+keras
