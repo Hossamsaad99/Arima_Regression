@@ -17,42 +17,10 @@ import pandas as pd
 # for arima
 from statsmodels.tsa.arima_model import ARIMA
 import pmdarima as pm
-# for LSTM
-from tensorflow import keras
-from keras.models import load_model
+
 import pickle
 
-def lstm(data_set):
-  """
-  Getting the desired data from yahoo, then doing some data manipulation such as data
-  reshaping
-  Args:
-      (str) data_set - the ticker of desired dataset (company)
-  Returns:
-      (float) diff_prediction - the model out-put (the prediction of the next day)
-      (float) real_prediction - the model output + today's price (real price of tomorrow)
-  """
 
-  # data gathering
-  df = pdr.DataReader(data_set, data_source='yahoo', start=date.today() - timedelta(100))
-
-  # data manipulation
-
-  # creating a new df with Xt - Xt-1 values of the close prices (most recent 60 days)
-  close_df = df['2012-01-01':].reset_index()['Close'][-61:]
-  close_diff = close_df.diff().dropna()
-  data = np.array(close_diff).reshape(-1, 1)
-
-  # reshaping the data to 3D to be accepted by our LSTM model
-  model_input = np.reshape(data, (1, 60, 1))
-
-  # loading the model and predicting
-  loaded_model = load_model("lstm_f_60.hdf5")
-  model_prediction = float(loaded_model.predict(model_input))
-  real_prediction = model_prediction + df['Close'][-1]
-  
-
-  return model_prediction, real_prediction
 
 def arima(ticker):
   """
@@ -120,16 +88,12 @@ def index():
 @app.post('/predict')
 async def predict_price(data: str):
     if data == 'F':
-      
-      model_prediction, lstm_prediction = lstm(data)
-#       prophet_prediction = float(prophet(data))
-
       arima_prediction, diff = arima(data)
 
       reg_prediction,reg_diff = Regression(data)
 
 
-      return {'LSTM prediction' : lstm_prediction,'Arima prediction' : arima_prediction[0],'regression prediction' : reg_prediction[0]}
+      return {'Arima prediction' : arima_prediction[0],'regression prediction' : reg_prediction[0]}
 
    
     else:
