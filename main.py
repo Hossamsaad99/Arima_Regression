@@ -22,43 +22,6 @@ from tensorflow import keras
 from keras.models import load_model
 import pickle
 
-# import holidays
-# from prophet import Prophet
-# In[ ]:
-
-# def prophet (ticker):
-#   """
-#   Forcasting using prophet ! by Getting the desired data from yahoo, then doing some data manipulation, then the comes the prophet's turn
-#   Args:
-#       (str) ticket - the ticker of desired dataset (company)
-#   Returns:
-#       (float) prophet_output - the model out-put (the prediction of the next day)
-#   """
-
-#   # data_gathering
-#   df = pdr.DataReader(ticker, data_source='yahoo', start='2015-01-01')
-
-#   # data manipulation
-#   holiday = pd.DataFrame([])
-#   for date, name in sorted(holidays.UnitedStates(years=[2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]).items()):
-#       holiday = holiday.append(pd.DataFrame({'ds': date, 'holiday': "US-Holidays"}, index=[0]), ignore_index=True)
-#   holiday['ds'] = pd.to_datetime(holiday['ds'], format='%Y-%m-%d', errors='ignore')
-
-#   # data frame modification to be accepted by prophet
-#   data = df['Close'].reset_index()
-#   data.columns = ['ds', 'y']
-
-#   # model building
-#   m = Prophet(holidays=holiday,seasonality_mode='additive', changepoint_prior_scale = 0.1, seasonality_prior_scale=0.01)
-#   m.fit(data)
-
-#   # model predictions
-#   future = m.make_future_dataframe(periods=1)
-#   model_prediction = m.predict(future) 
-#   prophet_prediction = float(model_prediction[ 'yhat'][-1:])
-#   return prophet_prediction
-
-
 def lstm(data_set):
   """
   Getting the desired data from yahoo, then doing some data manipulation such as data
@@ -166,14 +129,9 @@ async def predict_price(data: str):
       reg_prediction,reg_diff = Regression(data)
 
 
-      return {
-#               'Prophet prediction': prophet_prediction,
-              'LSTM prediction' : lstm_prediction,
-              'Arima prediction' : arima_prediction[0],
-              'regression prediction' : reg_prediction[0]
+      return {'LSTM prediction' : lstm_prediction,'Arima prediction' : arima_prediction[0],'regression prediction' : reg_prediction[0]}
 
-            }
-
+   
     else:
       return {"the ticker not supported yet"}
 
